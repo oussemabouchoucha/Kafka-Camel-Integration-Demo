@@ -50,20 +50,19 @@ app.post('/api/mark-delivered', async (req, res) => {
       console.log('❌ Order not found in Aramex:', orderId);
     }
     
-    // Send status update to middleware
-    console.log('📤 Sending status update to middleware...');
+    // Send status update to shop via Kafka
+    console.log('📤 Sending status update to shop...');
     const statusUpdate = {
       orderId: orderId,
-      status: 'delivered',
-      updatedBy: 'aramex',
-      timestamp: new Date().toISOString()
+      status: 'Delivered',
+      service: 'Aramex'
     };
     
-    await axios.post('http://middleware:8085/status-update', statusUpdate, {
+    await axios.post('http://shop:5000/api/kafka/status-update', statusUpdate, {
       headers: { 'Content-Type': 'application/json' }
     });
     
-    console.log('✅ Status update sent to middleware');
+    console.log('✅ Status update sent to shop via Kafka');
     res.json({ success: true });
   } catch (error) {
     console.error('❌ Error updating status:', error.message);
