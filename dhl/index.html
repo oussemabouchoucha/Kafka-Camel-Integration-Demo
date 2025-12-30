@@ -244,6 +244,65 @@
             font-size: 0.85em;
             font-weight: bold;
         }
+
+        .status-badge.pending {
+            background: #FFC107;
+            color: #333;
+        }
+
+        .status-badge.delivered {
+            background: #4CAF50;
+        }
+
+        .status-badge.returned {
+            background: #F44336;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .action-btn.deliver {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .action-btn.deliver:hover {
+            background: #45a049;
+        }
+
+        .action-btn.return {
+            background: #F44336;
+            color: white;
+        }
+
+        .action-btn.return:hover {
+            background: #da190b;
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
     </style>
 </head>
 <body>
@@ -288,6 +347,7 @@
             const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
             
             return {
+                orderId: xmlDoc.querySelector('id')?.textContent || 'Unknown',
                 item: xmlDoc.querySelector('item')?.textContent || 'Unknown',
                 price: xmlDoc.querySelector('price')?.textContent || '0',
                 country: xmlDoc.querySelector('country')?.textContent || 'Unknown'
@@ -340,6 +400,18 @@
             container.innerHTML = '<div class="orders-list">' +
                 orders.map((order, index) => {
                     const orderData = parseXMLOrder(order.data);
+                    const status = order.status || 'pending';
+                    const statusEmoji = {
+                        'pending': '⏳',
+                        'delivered': '✓',
+                        'returned': '↩'
+                    };
+                    const statusText = {
+                        'pending': 'Received',
+                        'delivered': 'Delivered',
+                        'returned': 'Returned'
+                    };
+                    
                     return `
                         <div class="order-card">
                             <div class="order-header">
@@ -363,8 +435,20 @@
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Status</span>
-                                    <span class="status-badge">✓ Received</span>
+                                    <span class="status-badge ${status}">${statusEmoji[status]} ${statusText[status]}</span>
                                 </div>
+                            </div>
+                            <div class="action-buttons">
+                                <button class="action-btn deliver" 
+                                    onclick="updateStatus('${orderData.orderId || order.id}', 'delivered')"
+                                    ${status !== 'pending' ? 'disabled' : ''}>
+                                    ✓ Mark as Delivered
+                                </button>
+                                <button class="action-btn return" 
+                                    onclick="updateStatus('${orderData.orderId || order.id}', 'returned')"
+                                    ${status !== 'pending' ? 'disabled' : ''}>
+                                    ↩ Mark as Returned
+                                </button>
                             </div>
                         </div>
                     `;
@@ -388,6 +472,36 @@
                 return data.country;
             }));
             document.getElementById('countriesServed').textContent = countries.size;
+        }
+
+        function updateStatus(orderId, newStatus) {
+            if (!confirm(`Are you sure you want to mark this order as ${newStatus}?`)) {
+                return;
+            }
+
+            fetch('update_status.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    orderId: orderId,
+                    status: newStatus
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload orders to show updated status
+                    loadOrders();
+                } else {
+                    alert('Error updating status: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to update status');
+            });
         }
 
         // Load orders on page load

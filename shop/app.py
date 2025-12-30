@@ -81,6 +81,49 @@ def update_status():
     
     return {'success': True, 'message': 'Status updates are handled via Kafka'}
 
+@app.route('/api/kafka/status-update', methods=['POST'])
+def kafka_status_update():
+    """Endpoint for DHL/Aramex to publish status updates to Kafka"""
+    try:
+        data = request.json
+        order_id = data.get('orderId')
+        new_status = data.get('status')
+        service = data.get('service', 'Unknown')
+        
+        if not order_id or not new_status:
+            return {'success': False, 'error': 'Missing orderId or status'}, 400
+        
+        # Create status update message
+        status_message = {
+            'orderId': order_id,
+            'status': new_status,
+            'service': service,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        # Publish to Kafka topic
+        producer.produce(
+            'order-status-updates',
+            key=order_id,
+            value=json.dumps(status_message)
+        )
+        producer.flush()
+        
+        print(f'✅ Published status update to Kafka: Order {order_id} -> {new_status} (from {service})')
+        
+        # Also update in memory immediately
+        for order in orders_db:
+            if order['id'] == order_id:
+                order['status'] = new_status
+                print(f'✅ Updated order in memory: {order_id} -> {new_status}')
+                break
+        
+        return {'success': True, 'message': 'Status update published to Kafka'}
+        
+    except Exception as e:
+        print(f'❌ Error publishing status update: {e}')
+        return {'success': False, 'error': str(e)}, 500
+
 @app.route('/order', methods=['POST'])
 def order():
     form_data = request.form
