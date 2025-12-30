@@ -7,6 +7,15 @@
 A complete microservices architecture demonstrating **Enterprise Application Integration (EAI)** using **Kafka**, **Apache Camel (Spring Boot)**, **Python**, **Node.js**, and **PHP**.  
 Everything is fully containerized with **Docker** 🐳.
 
+### 🌟 Key Features
+
+- ✅ **Real-time Order Processing** - Orders flow instantly through Kafka
+- ✅ **Smart Content-Based Routing** - Automatic delivery partner selection
+- ✅ **Live Status Updates** - Real-time order tracking across all services
+- ✅ **Interactive Dashboards** - Modern UI for each delivery partner
+- ✅ **Event-Driven Architecture** - Kafka-powered asynchronous communication
+- ✅ **Multi-Format Support** - JSON, YAML, and XML transformations
+
 
 ## 📝 Project Description
 
@@ -102,7 +111,30 @@ Inspect messages directly in the Kafka broker:
 - Go to **Topics** → **orders** to see raw JSON messages arriving from the Shop.
 
 
-### 4. 🔍 Check the Logs (Debugging)
+### 4. � Track Orders in Delivery Partner Dashboards
+
+**View Aramex Orders (Tunisia):**  
+👉 http://localhost:3000
+
+- See all Tunisia domestic deliveries
+- Mark orders as "Delivered" with one click
+- Real-time status synchronization via Kafka
+
+**View DHL Orders (International):**  
+👉 http://localhost:8081
+
+- See all international deliveries
+- Update order status: "Delivered" or "Returned"
+- Real-time status updates across all services
+
+**View All Orders (Shop Dashboard):**  
+👉 http://localhost:5000/orders
+
+- Complete order history with live status updates
+- Status changes from DHL/Aramex are reflected instantly
+
+
+### 5. �🔍 Check the Logs (Debugging)
 
 
 - **Middleware** (routing logic):
@@ -126,11 +158,19 @@ Inspect messages directly in the Kafka broker:
 ## ⚙️ Architecture & Logic
 
 
+### Order Placement Flow
+
 1. **Producer**: The Shop App (Python/Flask) sends the order as JSON to the Kafka topic `orders`.
 2. **Consumer**: The Middleware (Spring Boot + Camel) listens to the topic.
 3. **Routing (Content-Based Router)**:
    - 🇹🇳 If **Country = Tunisia** → Convert to **YAML** → Send to **Aramex** (Node.js)
    - 🌍 For **any other country** (e.g., France, Germany) → Convert to **XML** → Send to **DHL** (PHP)
+
+### Status Update Flow (NEW ✨)
+
+4. **Status Management**: Delivery partners (DHL/Aramex) can update order status via their dashboards
+5. **Kafka Publishing**: Status updates are published to Kafka topic `order-status-updates`
+6. **Real-time Sync**: Shop service consumes status updates and reflects changes instantly
 
 
 ```mermaid
@@ -142,6 +182,7 @@ graph LR
 
     subgraph "Messaging Layer"
         K[("📨 Apache Kafka<br/>(Topic: orders)")]
+        KS[("📨 Kafka<br/>(Topic: order-status-updates)")]
     end
 
 
@@ -160,10 +201,14 @@ graph LR
     K -- "2. Stream" --> C
     C -- "3a. YAML (Tunisia)" --> A
     C -- "3b. XML (Others)" --> D
+    A -- "4a. Status Update" --> KS
+    D -- "4b. Status Update" --> KS
+    KS -- "5. Real-time Sync" --> P
 
 
     style C fill:#f9f,stroke:#333,stroke-width:4px
     style K fill:#ccf,stroke:#333,stroke-width:2px
+    style KS fill:#cfc,stroke:#333,stroke-width:2px
 ```
 
 
@@ -237,9 +282,10 @@ Contributions are welcome! Feel free to:
 | Service      | Port  | URL                              | Description                    |
 |--------------|-------|----------------------------------|--------------------------------|
 | Shop         | 5000  | http://localhost:5000            | Order placement interface      |
+| Shop Orders  | 5000  | http://localhost:5000/orders     | View all orders & status       |
 | Middleware   | 8080  | http://localhost:8080/actuator/hawtio | Camel routes dashboard |
-| Aramex       | 3000  | http://localhost:3000            | Tunisia deliveries endpoint    |
-| DHL          | 8081  | http://localhost:8081            | International deliveries       |
+| Aramex       | 3000  | http://localhost:3000            | Tunisia deliveries dashboard   |
+| DHL          | 8081  | http://localhost:8081            | International deliveries dashboard |
 | Kafka UI     | 8090  | http://localhost:8090            | Kafka topic monitoring         |
 | Kafka Broker | 9092  | localhost:9092                   | Kafka connection (internal)    |
 
