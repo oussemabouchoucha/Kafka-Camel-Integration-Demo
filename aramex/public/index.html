@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aramex Orders Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.2em;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-top: 10px;
+        }
+        
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #5568d3;
+        }
+        
+        .orders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .order-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        .order-card.no-animation {
+            animation: none;
+        }
+        
+        .order-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.2);
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .order-id {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 0.9em;
+        }
+        
+        .order-country {
+            background: #667eea;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+        }
+        
+        .order-detail {
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .order-label {
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .order-value {
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .order-price {
+            color: #27ae60;
+            font-size: 1.3em;
+        }
+        
+        .order-time {
+            color: #999;
+            font-size: 0.85em;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+            text-align: center;
+        }
+        
+        .no-orders {
+            background: white;
+            padding: 60px;
+            border-radius: 10px;
+            text-align: center;
+            color: #999;
+            font-size: 1.2em;
+        }
+        
+        .refresh-info {
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚚 Aramex Orders Dashboard</h1>
+            <p class="subtitle">Tunisia Domestic Deliveries</p>
+        </header>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalOrders">0</div>
+                <div class="stat-label">Total Orders</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalRevenue">0 TND</div>
+                <div class="stat-label">Total Revenue</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="avgPrice">0 TND</div>
+                <div class="stat-label">Average Price</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <span class="refresh-info">Auto-refresh every 10 seconds</span>
+            <button onclick="loadOrders()">🔄 Refresh Now</button>
+        </div>
+        
+        <div class="orders-grid" id="ordersContainer">
+            <div class="no-orders">No orders yet. Waiting for deliveries...</div>
+        </div>
+    </div>
+
+    <script>
+        let displayedOrderIds = new Set();
+        
+        async function loadOrders() {
+            try {
+                const response = await fetch('/api/orders');
+                const orders = await response.json();
+                
+                const container = document.getElementById('ordersContainer');
+                
+                if (orders.length === 0) {
+                    container.innerHTML = '<div class="no-orders">No orders yet. Waiting for deliveries...</div>';
+                    updateStats(orders);
+                    return;
+                }
+                
+                // Check for new orders
+                const newOrders = orders.filter(order => !displayedOrderIds.has(order.id));
+                
+                if (newOrders.length > 0) {
+                    // Add new order IDs to the set
+                    newOrders.forEach(order => displayedOrderIds.add(order.id));
+                }
+                
+                // Always render all orders to keep buttons updated
+                container.innerHTML = orders.slice().reverse().map(order => {
+                    const isNew = newOrders.some(newOrder => newOrder.id === order.id);
+                    const status = order.status || 'pending';
+                    return `
+                    <div class="order-card ${isNew ? '' : 'no-animation'}">
+                        <div class="order-header">
+                            <span class="order-id">ID: ${order.id.substring(0, 8)}...</span>
+                            <span class="order-country">🇹🇳 ${order.country}</span>
+                        </div>
+                        ${order.firstName || order.lastName ? `
+                        <div class="order-detail">
+                            <span class="order-label">👤 Client:</span>
+                            <span class="order-value">${order.firstName || ''} ${order.lastName || ''}</span>
+                        </div>
+                        ` : ''}
+                        ${order.phone ? `
+                        <div class="order-detail">
+                            <span class="order-label">📞 Phone:</span>
+                            <span class="order-value">${order.phone}</span>
+                        </div>
+                        ` : ''}
+                        <div class="order-detail">
+                            <span class="order-label">Item:</span>
+                            <span class="order-value">${order.item}</span>
+                        </div>
+                        <div class="order-detail">
+                            <span class="order-label">Price:</span>
+                            <span class="order-value order-price">${order.price} TND</span>
+                        </div>
+                        <div class="order-detail">
+                            <span class="order-label">Status:</span>
+                            <span class="order-value" style="color: ${status === 'delivered' ? '#28a745' : '#ffc107'}; font-weight: bold;">
+                                ${status === 'delivered' ? '✅ DELIVERED' : '⏳ PENDING'}
+                            </span>
+                        </div>
+                        <div class="order-time">
+                            📅 ${new Date(order.receivedAt).toLocaleString()}
+                        </div>
+                        ${status === 'pending' ? `
+                        <button onclick="markAsDelivered('${order.id}')" style="width: 100%; margin-top: 15px; padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                            ✅ Mark as Delivered
+                        </button>
+                        ` : ''}
+                    </div>
+                `;
+                }).join('');
+                
+                updateStats(orders);
+            } catch (error) {
+                console.error('Error loading orders:', error);
+            }
+        }
+        
+        function updateStats(orders) {
+            const total = orders.length;
+            const revenue = orders.reduce((sum, order) => sum + parseFloat(order.price || 0), 0);
+            const avg = total > 0 ? (revenue / total).toFixed(2) : 0;
+            
+            document.getElementById('totalOrders').textContent = total;
+            document.getElementById('totalRevenue').textContent = revenue.toFixed(2) + ' TND';
+            document.getElementById('avgPrice').textContent = avg + ' TND';
+        }
+        
+        async function markAsDelivered(orderId) {
+            try {
+                const response = await fetch('/api/mark-delivered', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ orderId: orderId })
+                });
+                
+                if (response.ok) {
+                    // Force reload to show updated status
+                    displayedOrderIds.clear();
+                    await loadOrders();
+                }
+            } catch (error) {
+                console.error('Error marking as delivered:', error);
+                alert('Failed to update status');
+            }
+        }
+        
+        // Load orders on page load
+        loadOrders();
+        
+        // Auto-refresh every 10 seconds
+        setInterval(loadOrders, 10000);
+    </script>
+</body>
+</html>

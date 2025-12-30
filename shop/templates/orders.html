@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>All Orders - Shop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <style>
+      .status-badge {
+        font-size: 0.9em;
+        padding: 5px 15px;
+        border-radius: 20px;
+      }
+      .status-pending {
+        background-color: #ffc107;
+        color: #000;
+      }
+      .status-delivered {
+        background-color: #28a745;
+        color: white;
+      }
+      .order-card {
+        transition: transform 0.2s;
+      }
+      .order-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      }
+      .navbar {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container">
+        <a class="navbar-brand" href="/">📦 Shop Simulation</a>
+        <div class="navbar-nav ms-auto">
+          <a class="nav-link active" href="/orders">📋 View All Orders</a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>📋 All Orders</h1>
+        <a href="/" class="btn btn-primary">➕ New Order</a>
+      </div>
+
+      {% if orders|length == 0 %}
+        <div class="alert alert-info text-center" role="alert">
+          <h4>No orders yet</h4>
+          <p>Start by placing your first order!</p>
+          <a href="/" class="btn btn-primary mt-2">Place an Order</a>
+        </div>
+      {% else %}
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <div class="card text-center">
+              <div class="card-body">
+                <h5 class="card-title">Total Orders</h5>
+                <h2 class="text-primary">{{ orders|length }}</h2>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card text-center">
+              <div class="card-body">
+                <h5 class="card-title">Pending</h5>
+                <h2 class="text-warning">{{ orders|selectattr('status', 'equalto', 'pending')|list|length }}</h2>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card text-center">
+              <div class="card-body">
+                <h5 class="card-title">Delivered</h5>
+                <h2 class="text-success">{{ orders|selectattr('status', 'equalto', 'delivered')|list|length }}</h2>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          {% for order in orders|reverse %}
+          <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card order-card h-100">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <small class="text-muted">ID: {{ order.id[:8] }}...</small>
+                <span class="status-badge status-{{ order.status }}">
+                  {% if order.status == 'pending' %}⏳{% else %}✅{% endif %} {{ order.status|upper }}
+                </span>
+              </div>
+              <div class="card-body">
+                <h5 class="card-title">{{ order.item }}</h5>
+                <hr>
+                <p class="mb-2"><strong>👤 Client:</strong> {{ order.firstName }} {{ order.lastName }}</p>
+                <p class="mb-2"><strong>📞 Phone:</strong> {{ order.phone }}</p>
+                <p class="mb-2"><strong>🌍 Country:</strong> {{ order.country }}</p>
+                <p class="mb-2"><strong>💰 Price:</strong> <span class="text-success fw-bold">{{ order.price }} TND</span></p>
+                <p class="mb-2"><small class="text-muted">📅 {{ order.createdAt[:19] }}</small></p>
+                {% if order.country == 'Tunisia' %}
+                  <p class="mb-0 mt-2"><small class="text-info">🚚 Handled by: <strong>Aramex</strong></small></p>
+                {% else %}
+                  <p class="mb-0 mt-2"><small class="text-info">✈️ Handled by: <strong>DHL</strong></small></p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script>
+      // Auto-refresh every 5 seconds to see status updates from Aramex
+      setInterval(() => {
+        location.reload();
+      }, 5000);
+    </script>
+  </body>
+</html>
