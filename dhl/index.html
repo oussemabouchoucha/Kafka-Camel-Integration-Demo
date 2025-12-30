@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌍 DHL International Deliveries</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #FFCC00 0%, #D40511 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #D40511;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.2em;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .number {
+            color: #D40511;
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+
+        .orders-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .orders-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #FFCC00;
+        }
+
+        .orders-header h2 {
+            color: #D40511;
+            font-size: 1.8em;
+        }
+
+        .refresh-btn {
+            background: #D40511;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: #B00410;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(212, 5, 17, 0.3);
+        }
+
+        .orders-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .order-card {
+            background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #D40511;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .order-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .order-id {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #D40511;
+        }
+
+        .order-time {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .order-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            color: #666;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            color: #333;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .country-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            background: #FFCC00;
+            color: #333;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .price {
+            color: #D40511;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .no-orders {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .no-orders svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.2em;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #D40511;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌍 DHL International Deliveries</h1>
+            <p>Tracking International Orders • Excellence. Simply delivered</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Total Orders</h3>
+                <div class="number" id="totalOrders">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Today's Orders</h3>
+                <div class="number" id="todayOrders">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Countries Served</h3>
+                <div class="number" id="countriesServed">0</div>
+            </div>
+        </div>
+
+        <div class="orders-section">
+            <div class="orders-header">
+                <h2>📦 Recent International Orders</h2>
+                <button class="refresh-btn" onclick="loadOrders()">🔄 Refresh</button>
+            </div>
+            <div id="ordersContainer">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading orders...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function parseXMLOrder(xmlString) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
+            
+            return {
+                item: xmlDoc.querySelector('item')?.textContent || 'Unknown',
+                price: xmlDoc.querySelector('price')?.textContent || '0',
+                country: xmlDoc.querySelector('country')?.textContent || 'Unknown'
+            };
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function loadOrders() {
+            fetch('orders.php')
+                .then(response => response.json())
+                .then(data => {
+                    displayOrders(data);
+                    updateStats(data);
+                })
+                .catch(error => {
+                    console.error('Error loading orders:', error);
+                    document.getElementById('ordersContainer').innerHTML = `
+                        <div class="no-orders">
+                            <p style="color: #D40511;">❌ Error loading orders. Please try again.</p>
+                        </div>
+                    `;
+                });
+        }
+
+        function displayOrders(orders) {
+            const container = document.getElementById('ordersContainer');
+            
+            if (!orders || orders.length === 0) {
+                container.innerHTML = `
+                    <div class="no-orders">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                        <h3>No International Orders Yet</h3>
+                        <p>Orders for countries outside Tunisia will appear here</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '<div class="orders-list">' +
+                orders.map((order, index) => {
+                    const orderData = parseXMLOrder(order.data);
+                    return `
+                        <div class="order-card">
+                            <div class="order-header">
+                                <div class="order-id">Order #${order.id}</div>
+                                <div class="order-time">⏰ ${formatTime(order.timestamp)}</div>
+                            </div>
+                            <div class="order-details">
+                                <div class="detail-item">
+                                    <span class="detail-label">Item</span>
+                                    <span class="detail-value">📦 ${orderData.item}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Destination</span>
+                                    <span class="detail-value">
+                                        <span class="country-badge">🌍 ${orderData.country}</span>
+                                    </span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Price</span>
+                                    <span class="price">$${orderData.price}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Status</span>
+                                    <span class="status-badge">✓ Received</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('') +
+                '</div>';
+        }
+
+        function updateStats(orders) {
+            document.getElementById('totalOrders').textContent = orders.length;
+            
+            // Count today's orders
+            const today = new Date().toDateString();
+            const todayCount = orders.filter(order => 
+                new Date(order.timestamp).toDateString() === today
+            ).length;
+            document.getElementById('todayOrders').textContent = todayCount;
+            
+            // Count unique countries
+            const countries = new Set(orders.map(order => {
+                const data = parseXMLOrder(order.data);
+                return data.country;
+            }));
+            document.getElementById('countriesServed').textContent = countries.size;
+        }
+
+        // Load orders on page load
+        loadOrders();
+
+        // Auto-refresh every 5 seconds
+        setInterval(loadOrders, 5000);
+    </script>
+</body>
+</html>
