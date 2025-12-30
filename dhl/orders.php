@@ -1,4 +1,8 @@
 <?php
+// Suppress all PHP errors/warnings from output
+error_reporting(0);
+ini_set('display_errors', '0');
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
@@ -19,8 +23,8 @@ if (file_exists($logFile)) {
     foreach ($lines as $index => $line) {
         if (trim($line)) {
             // Parse XML to extract orderId
-            $orderId = null;
-            if (preg_match('/<orderId>(.*?)<\/orderId>/', $line, $matches)) {
+            $orderId = '';
+            if (preg_match('/<id>(.*?)<\/id>/', $line, $matches)) {
                 $orderId = $matches[1];
             }
             
@@ -29,7 +33,7 @@ if (file_exists($logFile)) {
                 'id' => $orderNumber,
                 'data' => $line,
                 'timestamp' => time() - (count($lines) - $index) * 60,
-                'status' => isset($statuses[$orderId]) ? $statuses[$orderId] : 'pending'
+                'status' => !empty($orderId) && isset($statuses[$orderId]) ? $statuses[$orderId] : 'pending'
             ];
         }
     }
