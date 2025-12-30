@@ -489,18 +489,30 @@
                     status: newStatus
                 })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Reload orders to show updated status
-                    loadOrders();
-                } else {
-                    alert('Error updating status: ' + data.error);
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(text => {
+                try {
+                    const data = JSON.parse(text);
+                    if (data.success) {
+                        alert(`✓ Status updated to ${newStatus}!`);
+                        // Reload orders to show updated status
+                        loadOrders();
+                    } else {
+                        alert('Error: ' + (data.error || 'Unknown error'));
+                    }
+                } catch (e) {
+                    console.error('Response was not JSON:', text);
+                    alert('Server error: Invalid response');
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to update status');
+                console.error('Fetch error:', error);
+                alert('Failed to update status: ' + error.message);
             });
         }
 

@@ -1,4 +1,8 @@
 <?php
+// Suppress errors for cleaner JSON output
+error_reporting(0);
+ini_set('display_errors', '0');
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
@@ -32,7 +36,12 @@ if (file_exists($statusFile)) {
 $statuses[$orderId] = $status;
 
 // Save to file
-file_put_contents($statusFile, json_encode($statuses, JSON_PRETTY_PRINT));
+$saved = file_put_contents($statusFile, json_encode($statuses, JSON_PRETTY_PRINT));
+
+if ($saved === false) {
+    echo json_encode(['success' => false, 'error' => 'Failed to save status file']);
+    exit;
+}
 
 // Send status update to Kafka using curl to the shop's internal API
 $kafkaMessage = [
@@ -42,24 +51,36 @@ $kafkaMessage = [
     'service' => 'DHL'
 ];
 
-// Try to send to shop's kafka producer endpoint
-$ch = curl_init('http://shop:5000/api/kafka/status-update');
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($kafkaMessage));
-curl_setopt($ch, CURLOPT_TIMEOUT, 2);
-$response = curl_exec($ch);
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+$kafkaNotified = false;
+$httpCode = 0;
+
+// Try to send to shop's kafka producer endpoint if curl is available
+if (function_exists('curl_init')) {
+    try {
+        $ch = curl_init('http://shop:5000/api/kafka/status-update');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($kafkaMessage));
+        curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        $kafkaNotified = ($httpCode == 200);
+    } catch (Exception $e) {
+        // Curl failed, but status was saved locally
+    }
+}
 
 // Log the update
-error_log("[DHL] Status updated: Order $orderId -> $status (Kafka: $httpCode)");
+error_log("[DHL] Status updated: Order $orderId -> $status (Saved: yes, Kafka: $httpCode)");
 
 echo json_encode([
     'success' => true,
     'orderId' => $orderId,
     'status' => $status,
-    'kafkaNotified' => $httpCode == 200
+    'kafkaNotified' => $kafkaNotified,
+    'httpCode' => $httpCode
 ]);
 ?>
