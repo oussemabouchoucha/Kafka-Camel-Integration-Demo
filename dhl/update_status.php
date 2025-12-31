@@ -43,7 +43,7 @@ if ($saved === false) {
     exit;
 }
 
-// Send status update to Kafka using curl to the shop's internal API
+// Send status update to middleware
 $kafkaMessage = [
     'orderId' => $orderId,
     'status' => $status,
@@ -54,10 +54,10 @@ $kafkaMessage = [
 $kafkaNotified = false;
 $httpCode = 0;
 
-// Try to send to shop's kafka producer endpoint if curl is available
+// Try to send to the middleware service if curl is available
 if (function_exists('curl_init')) {
     try {
-        $ch = curl_init('http://shop:5000/api/kafka/status-update');
+        $ch = curl_init('http://middleware:8085/status-update');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
@@ -74,13 +74,13 @@ if (function_exists('curl_init')) {
 }
 
 // Log the update
-error_log("[DHL] Status updated: Order $orderId -> $status (Saved: yes, Kafka: $httpCode)");
+error_log("[DHL] Status updated: Order $orderId -> $status (Saved: yes, Middleware notified: $httpCode)");
 
 echo json_encode([
     'success' => true,
     'orderId' => $orderId,
     'status' => $status,
-    'kafkaNotified' => $kafkaNotified,
+    'middlewareNotified' => $kafkaNotified,
     'httpCode' => $httpCode
 ]);
 ?>

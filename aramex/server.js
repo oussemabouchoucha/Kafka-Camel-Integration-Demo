@@ -1,11 +1,47 @@
 const express = require('express');
 const yaml = require('js-yaml');
 const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
 const app = express();
 const port = 3000;
 
-// Store orders in memory
+// Define the path for the persistent order data
+const DATA_DIR = '/app/data';
+const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
+
+// Ensure the data directory exists
+if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+// Store orders in memory, loaded from file
 let orders = [];
+
+const loadOrders = () => {
+    try {
+        if (fs.existsSync(ORDERS_FILE)) {
+            const data = fs.readFileSync(ORDERS_FILE, 'utf8');
+            orders = JSON.parse(data);
+            console.log(`✅ Loaded ${orders.length} orders from ${ORDERS_FILE}`);
+        } else {
+            console.log(`⚠️ Orders file not found at ${ORDERS_FILE}, starting fresh.`);
+        }
+    } catch (e) {
+        console.error('❌ Error loading orders:', e);
+    }
+};
+
+const saveOrders = () => {
+    try {
+        fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
+    } catch (e) {
+        console.error('❌ Error saving orders:', e);
+    }
+};
+
+// Load orders on startup
+loadOrders();
 
 app.use(express.json());
 app.use(express.text({ type: 'application/x-yaml' }));
@@ -15,12 +51,12 @@ app.post('/aramex', (req, res) => {
   console.log('Received YAML:', req.body);
   
   try {
-    // Parse YAML to JSON
     const order = yaml.load(req.body);
     order.receivedAt = new Date().toISOString();
     order.status = 'pending';
     orders.push(order);
-    console.log('Order stored:', order);
+    saveOrders(); // Save after adding
+    console.log('Order stored and saved:', order);
   } catch (e) {
     console.error('Error parsing YAML:', e);
   }
@@ -41,28 +77,28 @@ app.post('/api/mark-delivered', async (req, res) => {
   console.log('Order ID:', orderId);
   
   try {
-    // Update status in local memory
     const order = orders.find(o => o.id === orderId);
     if (order) {
       order.status = 'delivered';
-      console.log('✅ Status updated locally in Aramex');
+      saveOrders(); // Save after updating status
+      console.log('✅ Status updated locally and saved in Aramex');
     } else {
       console.log('❌ Order not found in Aramex:', orderId);
     }
     
-    // Send status update to shop via Kafka
-    console.log('📤 Sending status update to shop...');
+    // Send status update to middleware
+    console.log('📤 Sending status update to middleware...');
     const statusUpdate = {
       orderId: orderId,
       status: 'Delivered',
       service: 'Aramex'
     };
     
-    await axios.post('http://shop:5000/api/kafka/status-update', statusUpdate, {
+    await axios.post('http://middleware:8085/status-update', statusUpdate, {
       headers: { 'Content-Type': 'application/json' }
     });
     
-    console.log('✅ Status update sent to shop via Kafka');
+    console.log('✅ Status update sent to middleware');
     res.json({ success: true });
   } catch (error) {
     console.error('❌ Error updating status:', error.message);
@@ -72,7 +108,7 @@ app.post('/api/mark-delivered', async (req, res) => {
 
 // Serve the main page
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/public/index.html');
+  res.sendFile(path.join(__dirname, '/public/index.html'));
 });
 
 app.listen(port, () => {

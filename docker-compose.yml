@@ -10,6 +10,11 @@ services:
       - zookeeper
     ports:
       - "9092:9092"
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -24,10 +29,18 @@ services:
     ports:
       - "8080:8080"
       - "8085:8085"
+    mem_limit: 512M
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
     environment:
       CAMEL_COMPONENT_KAFKA_BROKERS: kafka:29092
+      JAVA_OPTS: -Djava.security.egd=file:/dev/./urandom
   dhl:
     image: php:apache
     volumes:
@@ -39,6 +52,8 @@ services:
       context: ./aramex
     ports:
       - "3000:3000"
+    volumes:
+      - ./aramex/data:/app/data
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     ports:
@@ -54,6 +69,8 @@ services:
       context: ./shop
     ports:
       - "5000:5000"
+    volumes:
+      - ./shop/data:/app/data
     depends_on:
       - kafka
     environment:
