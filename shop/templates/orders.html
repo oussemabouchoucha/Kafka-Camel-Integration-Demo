@@ -19,6 +19,10 @@
         background-color: #28a745;
         color: white;
       }
+      .status-returned {
+        background-color: #dc3545;
+        color: white;
+      }
       .order-card {
         transition: transform 0.2s;
       }
@@ -56,7 +60,7 @@
         </div>
       {% else %}
         <div class="row mb-3">
-          <div class="col-md-4">
+          <div class="col-md-3">
             <div class="card text-center">
               <div class="card-body">
                 <h5 class="card-title">Total Orders</h5>
@@ -64,7 +68,7 @@
               </div>
             </div>
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
             <div class="card text-center">
               <div class="card-body">
                 <h5 class="card-title">Pending</h5>
@@ -72,11 +76,19 @@
               </div>
             </div>
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
             <div class="card text-center">
               <div class="card-body">
                 <h5 class="card-title">Delivered</h5>
                 <h2 class="text-success">{{ orders|selectattr('status', 'equalto', 'delivered')|list|length }}</h2>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-center">
+              <div class="card-body">
+                <h5 class="card-title">Returned</h5>
+                <h2 class="text-danger">{{ orders|selectattr('status', 'equalto', 'returned')|list|length }}</h2>
               </div>
             </div>
           </div>
@@ -89,7 +101,7 @@
               <div class="card-header d-flex justify-content-between align-items-center">
                 <small class="text-muted">ID: {{ order.id[:8] }}...</small>
                 <span class="status-badge status-{{ order.status }}">
-                  {% if order.status == 'pending' %}⏳{% else %}✅{% endif %} {{ order.status|upper }}
+                  {% if order.status == 'pending' %}⏳{% elif order.status == 'delivered' %}✅{% elif order.status == 'returned' %}❌{% else %}📦{% endif %} {{ order.status|upper }}
                 </span>
               </div>
               <div class="card-body">
