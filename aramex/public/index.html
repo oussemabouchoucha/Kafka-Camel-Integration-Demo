@@ -286,17 +286,22 @@
                         </div>
                         <div class="order-detail">
                             <span class="order-label">Status:</span>
-                            <span class="order-value" style="color: ${status === 'delivered' ? '#28a745' : '#ffc107'}; font-weight: bold;">
-                                ${status === 'delivered' ? '✅ DELIVERED' : '⏳ PENDING'}
+                            <span class="order-value" style="color: ${status === 'delivered' ? '#28a745' : status === 'returned' ? '#dc3545' : '#ffc107'}; font-weight: bold;">
+                                ${status === 'delivered' ? '✅ DELIVERED' : status === 'returned' ? '❌ RETURNED' : '⏳ PENDING'}
                             </span>
                         </div>
                         <div class="order-time">
                             📅 ${new Date(order.receivedAt).toLocaleString()}
                         </div>
                         ${status === 'pending' ? `
-                        <button onclick="markAsDelivered('${order.id}')" style="width: 100%; margin-top: 15px; padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
-                            ✅ Mark as Delivered
-                        </button>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
+                            <button onclick="markAsDelivered('${order.id}')" style="padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                                ✅ Delivered
+                            </button>
+                            <button onclick="markAsReturned('${order.id}')" style="padding: 10px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                                ↩ Returned
+                            </button>
+                        </div>
                         ` : ''}
                     </div>
                 `;
@@ -335,6 +340,27 @@
                 }
             } catch (error) {
                 console.error('Error marking as delivered:', error);
+                alert('Failed to update status');
+            }
+        }
+        
+        async function markAsReturned(orderId) {
+            try {
+                const response = await fetch('/api/mark-returned', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ orderId: orderId })
+                });
+                
+                if (response.ok) {
+                    // Force reload to show updated status
+                    displayedOrderIds.clear();
+                    await loadOrders();
+                }
+            } catch (error) {
+                console.error('Error marking as returned:', error);
                 alert('Failed to update status');
             }
         }

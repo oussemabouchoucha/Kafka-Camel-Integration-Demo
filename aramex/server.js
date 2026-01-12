@@ -107,6 +107,44 @@ app.post('/api/mark-delivered', async (req, res) => {
   }
 });
 
+// API endpoint to mark order as returned
+app.post('/api/mark-returned', async (req, res) => {
+  const { orderId } = req.body;
+  
+  console.log('=== Mark as Returned Request ===');
+  console.log('Order ID:', orderId);
+  
+  try {
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+      order.status = 'returned';
+      saveOrders(); // Save after updating status
+      console.log('✅ Status updated locally and saved in Aramex');
+    } else {
+      console.log('❌ Order not found in Aramex:', orderId);
+    }
+    
+    // Send status update to middleware
+    console.log('📤 Sending status update to middleware...');
+    const statusUpdate = {
+      orderId: orderId,
+      status: 'returned',
+      service: 'Aramex',
+      item: order.item
+    };
+    
+    await axios.post('http://middleware:8085/status-update', statusUpdate, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    console.log('✅ Status update sent to middleware');
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Error updating status:', error.message);
+    res.json({ success: false, error: error.message });
+  }
+});
+
 // Serve the main page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '/public/index.html'));
