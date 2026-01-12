@@ -90,8 +90,9 @@ app.post('/api/mark-delivered', async (req, res) => {
     console.log('📤 Sending status update to middleware...');
     const statusUpdate = {
       orderId: orderId,
-      status: 'Delivered',
-      service: 'Aramex'
+      status: 'delivered',
+      service: 'Aramex',
+      item: order.item
     };
     
     await axios.post('http://middleware:8085/status-update', statusUpdate, {

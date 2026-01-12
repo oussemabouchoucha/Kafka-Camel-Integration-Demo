@@ -43,12 +43,23 @@ if ($saved === false) {
     exit;
 }
 
+// Load order details to get the item
+$detailsFile = 'order_details.json';
+$item = 'Unknown';
+if (file_exists($detailsFile)) {
+    $orderDetails = json_decode(file_get_contents($detailsFile), true);
+    if (isset($orderDetails[$orderId]['item'])) {
+        $item = $orderDetails[$orderId]['item'];
+    }
+}
+
 // Send status update to middleware
 $kafkaMessage = [
     'orderId' => $orderId,
     'status' => $status,
     'timestamp' => date('Y-m-d H:i:s'),
-    'service' => 'DHL'
+    'service' => 'DHL',
+    'item' => $item
 ];
 
 $kafkaNotified = false;
