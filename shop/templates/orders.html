@@ -3,120 +3,534 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>All Orders - Shop</title>
+    <title>All Orders - Modern Shop</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-      .status-badge {
-        font-size: 0.9em;
-        padding: 5px 15px;
-        border-radius: 20px;
+      :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        --info-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
       }
-      .status-pending {
-        background-color: #ffc107;
-        color: #000;
+
+      * {
+        font-family: 'Inter', sans-serif;
       }
-      .status-delivered {
-        background-color: #28a745;
-        color: white;
+
+      body {
+        background-color: #f8fafc;
+        color: #334155;
+        min-height: 100vh;
       }
-      .status-returned {
-        background-color: #dc3545;
-        color: white;
-      }
-      .order-card {
-        transition: transform 0.2s;
-      }
-      .order-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      }
+
+      /* Modern Navbar */
       .navbar {
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        background: var(--primary-gradient) !important;
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        padding: 15px 0;
+        margin-bottom: 40px;
+      }
+
+      .navbar-brand {
+        font-weight: 700;
+        font-size: 1.8rem;
+        color: white !important;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .navbar-brand i {
+        color: #fbbf24;
+        font-size: 1.8rem;
+      }
+
+      .nav-link {
+        color: rgba(255, 255, 255, 0.9) !important;
+        font-weight: 500;
+        padding: 10px 20px !important;
+        border-radius: 8px;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .nav-link:hover, .nav-link.active {
+        background-color: rgba(255, 255, 255, 0.15);
+        color: white !important;
+        transform: translateY(-2px);
+      }
+
+      /* Page Header */
+      .page-header {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
         margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e2e8f0;
+      }
+
+      .page-title {
+        font-weight: 700;
+        color: #1e293b;
+        font-size: 2.2rem;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .page-title i {
+        color: #667eea;
+        font-size: 2rem;
+      }
+
+      /* Stats Cards */
+      .stat-card {
+        border: none;
+        border-radius: 16px;
+        padding: 25px;
+        text-align: center;
+        height: 100%;
+        transition: transform 0.3s, box-shadow 0.3s;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+      }
+
+      .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      }
+
+      .stat-card.total-orders {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border: 1px solid #bae6fd;
+      }
+
+      .stat-card.pending {
+        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        border: 1px solid #fde68a;
+      }
+
+      .stat-card.delivered {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        border: 1px solid #bbf7d0;
+      }
+
+      .stat-card.returned {
+        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        border: 1px solid #fecaca;
+      }
+
+      .stat-icon {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+      }
+
+      .stat-title {
+        font-size: 1rem;
+        color: #64748b;
+        font-weight: 600;
+        margin-bottom: 10px;
+      }
+
+      .stat-value {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+      }
+
+      .total-orders .stat-icon, .total-orders .stat-value {
+        color: #0369a1;
+      }
+
+      .pending .stat-icon, .pending .stat-value {
+        color: #d97706;
+      }
+
+      .delivered .stat-icon, .delivered .stat-value {
+        color: #059669;
+      }
+
+      .returned .stat-icon, .returned .stat-value {
+        color: #dc2626;
+      }
+
+      /* Order Cards */
+      .order-card {
+        border: none;
+        border-radius: 16px;
+        overflow: hidden;
+        transition: transform 0.3s, box-shadow 0.3s;
+        height: 100%;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        background: white;
+      }
+
+      .order-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+      }
+
+      .order-header {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        padding: 20px;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .order-id {
+        font-family: 'Monaco', 'Courier New', monospace;
+        font-size: 0.85rem;
+        color: #64748b;
+        background: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
+      }
+
+      .status-badge {
+        font-size: 0.8rem;
+        padding: 6px 18px;
+        border-radius: 20px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        border: none;
+      }
+
+      .status-pending {
+        background: var(--warning-gradient);
+        color: white;
+      }
+
+      .status-delivered {
+        background: var(--success-gradient);
+        color: white;
+      }
+
+      .status-returned {
+        background: var(--danger-gradient);
+        color: white;
+      }
+
+      .order-body {
+        padding: 25px;
+      }
+
+      .order-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 15px;
+        line-height: 1.4;
+      }
+
+      .order-details {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .order-details li {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 12px;
+        color: #475569;
+      }
+
+      .order-details li i {
+        color: #667eea;
+        margin-right: 12px;
+        margin-top: 2px;
+        font-size: 1rem;
+        width: 20px;
+      }
+
+      .order-price {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #10b981;
+        margin: 20px 0;
+        text-align: center;
+        padding: 15px;
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        border-radius: 12px;
+      }
+
+      .order-footer {
+        padding: 20px;
+        border-top: 1px solid #f1f5f9;
+        background: #f8fafc;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .order-date {
+        font-size: 0.85rem;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .shipping-info {
+        font-size: 0.85rem;
+        padding: 6px 12px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .shipping-domestic {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+
+      .shipping-international {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      /* No Orders Alert */
+      .no-orders-alert {
+        background: white;
+        border-radius: 16px;
+        padding: 60px 40px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e2e8f0;
+        margin-top: 30px;
+      }
+
+      .no-orders-icon {
+        font-size: 4rem;
+        color: #94a3b8;
+        margin-bottom: 20px;
+      }
+
+      .no-orders-alert h4 {
+        color: #475569;
+        font-weight: 600;
+        margin-bottom: 15px;
+      }
+
+      .no-orders-alert p {
+        color: #94a3b8;
+        margin-bottom: 25px;
+      }
+
+      /* Buttons */
+      .btn-modern {
+        padding: 12px 30px;
+        border-radius: 12px;
+        font-weight: 600;
+        border: none;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .btn-modern-primary {
+        background: var(--primary-gradient);
+        color: white;
+      }
+
+      .btn-modern-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        color: white;
+      }
+
+      .btn-modern-primary:active {
+        transform: translateY(0);
+      }
+
+      /* Country Flags */
+      .country-flag {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 8px;
+        vertical-align: middle;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+        .page-title {
+          font-size: 1.8rem;
+        }
+        
+        .stat-value {
+          font-size: 1.8rem;
+        }
+        
+        .navbar-brand {
+          font-size: 1.5rem;
+        }
+        
+        .page-header {
+          padding: 20px;
+        }
       }
     </style>
   </head>
   <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <!-- Modern Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light">
       <div class="container">
-        <a class="navbar-brand" href="/">📦 Shop Simulation</a>
+        <a class="navbar-brand" href="/">
+          <i class="fas fa-shopping-bag"></i>
+          MODERN SHOP
+        </a>
         <div class="navbar-nav ms-auto">
-          <a class="nav-link active" href="/orders">📋 View All Orders</a>
+          <a class="nav-link active" href="/orders">
+            <i class="fas fa-list-alt"></i>
+            📋 View All Orders
+          </a>
         </div>
       </div>
     </nav>
 
     <div class="container">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>📋 All Orders</h1>
-        <a href="/" class="btn btn-primary">➕ New Order</a>
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+          <div>
+            <h1 class="page-title">
+              <i class="fas fa-clipboard-list"></i>
+              All Orders Dashboard
+            </h1>
+            <p class="text-muted mb-0 mt-2">Monitor and manage all customer orders in real-time</p>
+          </div>
+          <a href="/" class="btn btn-modern btn-modern-primary mt-3 mt-md-0">
+            <i class="fas fa-plus-circle"></i>
+            ➕ New Order
+          </a>
+        </div>
       </div>
 
       {% if orders|length == 0 %}
-        <div class="alert alert-info text-center" role="alert">
+        <!-- No Orders State -->
+        <div class="no-orders-alert">
+          <div class="no-orders-icon">
+            <i class="fas fa-clipboard"></i>
+          </div>
           <h4>No orders yet</h4>
-          <p>Start by placing your first order!</p>
-          <a href="/" class="btn btn-primary mt-2">Place an Order</a>
+          <p>Start by placing your first order! Your dashboard will show statistics and order details here.</p>
+          <a href="/" class="btn btn-modern btn-modern-primary">
+            <i class="fas fa-shopping-cart"></i>
+            Place Your First Order
+          </a>
         </div>
       {% else %}
-        <div class="row mb-3">
-          <div class="col-md-3">
-            <div class="card text-center">
-              <div class="card-body">
-                <h5 class="card-title">Total Orders</h5>
-                <h2 class="text-primary">{{ orders|length }}</h2>
+        <!-- Statistics Cards -->
+        <div class="row mb-5">
+          <div class="col-md-3 mb-4">
+            <div class="stat-card total-orders">
+              <div class="stat-icon">
+                <i class="fas fa-shopping-bag"></i>
               </div>
+              <div class="stat-title">Total Orders</div>
+              <div class="stat-value">{{ orders|length }}</div>
             </div>
           </div>
-          <div class="col-md-3">
-            <div class="card text-center">
-              <div class="card-body">
-                <h5 class="card-title">Pending</h5>
-                <h2 class="text-warning">{{ orders|selectattr('status', 'equalto', 'pending')|list|length }}</h2>
+          <div class="col-md-3 mb-4">
+            <div class="stat-card pending">
+              <div class="stat-icon">
+                <i class="fas fa-clock"></i>
               </div>
+              <div class="stat-title">Pending</div>
+              <div class="stat-value">{{ orders|selectattr('status', 'equalto', 'pending')|list|length }}</div>
             </div>
           </div>
-          <div class="col-md-3">
-            <div class="card text-center">
-              <div class="card-body">
-                <h5 class="card-title">Delivered</h5>
-                <h2 class="text-success">{{ orders|selectattr('status', 'equalto', 'delivered')|list|length }}</h2>
+          <div class="col-md-3 mb-4">
+            <div class="stat-card delivered">
+              <div class="stat-icon">
+                <i class="fas fa-check-circle"></i>
               </div>
+              <div class="stat-title">Delivered</div>
+              <div class="stat-value">{{ orders|selectattr('status', 'equalto', 'delivered')|list|length }}</div>
             </div>
           </div>
-          <div class="col-md-3">
-            <div class="card text-center">
-              <div class="card-body">
-                <h5 class="card-title">Returned</h5>
-                <h2 class="text-danger">{{ orders|selectattr('status', 'equalto', 'returned')|list|length }}</h2>
+          <div class="col-md-3 mb-4">
+            <div class="stat-card returned">
+              <div class="stat-icon">
+                <i class="fas fa-exchange-alt"></i>
               </div>
+              <div class="stat-title">Returned</div>
+              <div class="stat-value">{{ orders|selectattr('status', 'equalto', 'returned')|list|length }}</div>
             </div>
           </div>
         </div>
 
+        <!-- Orders Grid -->
         <div class="row">
           {% for order in orders|reverse %}
           <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card order-card h-100">
-              <div class="card-header d-flex justify-content-between align-items-center">
-                <small class="text-muted">ID: {{ order.id[:8] }}...</small>
+            <div class="order-card">
+              <div class="order-header">
+                <span class="order-id">ID: {{ order.id[:8] }}...</span>
                 <span class="status-badge status-{{ order.status }}">
-                  {% if order.status == 'pending' %}⏳{% elif order.status == 'delivered' %}✅{% elif order.status == 'returned' %}❌{% else %}📦{% endif %} {{ order.status|upper }}
+                  {% if order.status == 'pending' %}<i class="fas fa-clock"></i>{% elif order.status == 'delivered' %}<i class="fas fa-check"></i>{% elif order.status == 'returned' %}<i class="fas fa-times"></i>{% else %}<i class="fas fa-box"></i>{% endif %}
+                  {{ order.status|upper }}
                 </span>
               </div>
-              <div class="card-body">
-                <h5 class="card-title">{{ order.item }}</h5>
-                <hr>
-                <p class="mb-2"><strong>👤 Client:</strong> {{ order.firstName }} {{ order.lastName }}</p>
-                <p class="mb-2"><strong>📞 Phone:</strong> {{ order.phone }}</p>
-                <p class="mb-2"><strong>🌍 Country:</strong> {{ order.country }}</p>
-                <p class="mb-2"><strong>💰 Price:</strong> <span class="text-success fw-bold">{{ order.price }} TND</span></p>
-                <p class="mb-2"><small class="text-muted">📅 {{ order.createdAt[:19] }}</small></p>
-                {% if order.country == 'Tunisia' %}
-                  <p class="mb-0 mt-2"><small class="text-info">🚚 Handled by: <strong>Aramex</strong></small></p>
-                {% else %}
-                  <p class="mb-0 mt-2"><small class="text-info">✈️ Handled by: <strong>DHL</strong></small></p>
-                {% endif %}
+              
+              <div class="order-body">
+                <h5 class="order-title">{{ order.item }}</h5>
+                
+                <ul class="order-details">
+                  <li>
+                    <i class="fas fa-user"></i>
+                    <div>
+                      <strong>Client:</strong> {{ order.firstName }} {{ order.lastName }}
+                    </div>
+                  </li>
+                  <li>
+                    <i class="fas fa-phone"></i>
+                    <div>
+                      <strong>Phone:</strong> {{ order.phone }}
+                    </div>
+                  </li>
+                  <li>
+                    <i class="fas fa-globe"></i>
+                    <div>
+                      <strong>Country:</strong> {{ order.country }}
+                    </div>
+                  </li>
+                </ul>
+                
+                <div class="order-price">
+                  {{ order.price }} TND
+                </div>
+              </div>
+              
+              <div class="order-footer">
+                <div class="order-date">
+                  <i class="far fa-calendar-alt"></i>
+                  {{ order.createdAt[:19] }}
+                </div>
+                <div class="shipping-info {% if order.country == 'Tunisia' %}shipping-domestic{% else %}shipping-international{% endif %}">
+                  {% if order.country == 'Tunisia' %}
+                    <i class="fas fa-truck"></i> Aramex
+                  {% else %}
+                    <i class="fas fa-plane"></i> DHL
+                  {% endif %}
+                </div>
               </div>
             </div>
           </div>
@@ -127,10 +541,22 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
     <script>
-      // Auto-refresh every 5 seconds to see status updates from Aramex
-      setInterval(() => {
-        location.reload();
-      }, 5000);
+   
+      
+      // Add animation to cards when they load
+      document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.order-card');
+        cards.forEach((card, index) => {
+          card.style.opacity = '0';
+          card.style.transform = 'translateY(20px)';
+          
+          setTimeout(() => {
+            card.style.transition = 'opacity 0.5s, transform 0.5s';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+          }, index * 100);
+        });
+      });
     </script>
   </body>
 </html>

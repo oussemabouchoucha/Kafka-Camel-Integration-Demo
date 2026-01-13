@@ -3,75 +3,567 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Shop Simulation</title>
+    <title>Place New Order - Modern Shop</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        --input-bg: #f8fafc;
+      }
+
+      * {
+        font-family: 'Inter', sans-serif;
+      }
+
+      body {
+        background-color: #f8fafc;
+        color: #334155;
+        min-height: 100vh;
+        background-image: 
+          radial-gradient(circle at 10% 20%, rgba(232, 242, 255, 0.5) 0%, transparent 20%),
+          radial-gradient(circle at 90% 80%, rgba(236, 232, 255, 0.5) 0%, transparent 20%);
+      }
+
+      /* Modern Navbar */
+      .navbar {
+        background: var(--primary-gradient) !important;
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        padding: 15px 0;
+        margin-bottom: 40px;
+      }
+
+      .navbar-brand {
+        font-weight: 700;
+        font-size: 1.8rem;
+        color: white !important;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .navbar-brand i {
+        color: #fbbf24;
+        font-size: 1.8rem;
+      }
+
+      .nav-link {
+        color: rgba(255, 255, 255, 0.9) !important;
+        font-weight: 500;
+        padding: 10px 20px !important;
+        border-radius: 8px;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .nav-link:hover, .nav-link.active {
+        background-color: rgba(255, 255, 255, 0.15);
+        color: white !important;
+        transform: translateY(-2px);
+      }
+
+      /* Main Container */
+      .main-container {
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      /* Page Header */
+      .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding: 30px;
+        border-radius: 16px;
+        background: white;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e2e8f0;
+      }
+
+      .page-title {
+        font-weight: 700;
+        color: #1e293b;
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+      }
+
+      .page-title i {
+        color: #667eea;
+        font-size: 2.2rem;
+      }
+
+      .page-subtitle {
+        color: #64748b;
+        font-size: 1.1rem;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      /* Order Form */
+      .order-form-container {
+        background: white;
+        border-radius: 16px;
+        padding: 40px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e2e8f0;
+        margin-bottom: 50px;
+      }
+
+      .form-section-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .form-section-title i {
+        color: #667eea;
+        font-size: 1.2rem;
+      }
+
+      /* Form Styling */
+      .form-label {
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .form-label i {
+        color: #667eea;
+        font-size: 0.9rem;
+      }
+
+      .input-with-icon {
+        position: relative;
+      }
+
+      .input-with-icon i {
+        position: absolute;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 1rem;
+      }
+
+      .form-control, .form-select {
+        padding: 16px 20px 16px 50px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 1rem;
+        color: #334155;
+        background-color: var(--input-bg);
+        transition: all 0.3s;
+        height: auto;
+      }
+
+      .form-control:focus, .form-select:focus {
+        background-color: white;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        outline: none;
+      }
+
+      .form-control::placeholder {
+        color: #94a3b8;
+      }
+
+      /* Alert Styling */
+      .alert-modern {
+        border: none;
+        border-radius: 12px;
+        padding: 20px 25px;
+        font-weight: 500;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+      }
+
+      .alert-success {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        color: #065f46;
+        border-left: 4px solid #10b981;
+      }
+
+      .alert-danger {
+        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        color: #991b1b;
+        border-left: 4px solid #ef4444;
+      }
+
+      .alert-warning {
+        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        color: #92400e;
+        border-left: 4px solid #f59e0b;
+      }
+
+      .alert-info {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        color: #1e40af;
+        border-left: 4px solid #3b82f6;
+      }
+
+      /* Submit Button */
+      .submit-btn {
+        width: 100%;
+        padding: 18px;
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 30px;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      }
+
+      .submit-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+      }
+
+      .submit-btn:active {
+        transform: translateY(0);
+      }
+
+      /* Country Flags in Select */
+      .country-option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 5px;
+      }
+
+      .country-flag {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        object-fit: cover;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+
+      /* Form Row Spacing */
+      .form-row-spacing {
+        margin-bottom: 25px;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .page-title {
+          font-size: 2rem;
+        }
+        
+        .order-form-container {
+          padding: 25px;
+        }
+        
+        .navbar-brand {
+          font-size: 1.5rem;
+        }
+        
+        .form-control, .form-select {
+          padding: 14px 16px 14px 45px;
+        }
+      }
+
+      /* Animation */
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .fade-in {
+        animation: fadeIn 0.5s ease-out;
+      }
+
+      /* Form Steps Indicator */
+      .form-steps {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 40px;
+        position: relative;
+      }
+
+      .form-step {
+        text-align: center;
+        flex: 1;
+        position: relative;
+      }
+
+      .step-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #e2e8f0;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        font-weight: 600;
+        z-index: 2;
+        position: relative;
+      }
+
+      .step-circle.active {
+        background: var(--primary-gradient);
+        color: white;
+      }
+
+      .step-label {
+        font-size: 0.85rem;
+        color: #94a3b8;
+        font-weight: 500;
+      }
+
+      .step-label.active {
+        color: #667eea;
+        font-weight: 600;
+      }
+
+      .form-steps::before {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: 25%;
+        right: 25%;
+        height: 2px;
+        background: #e2e8f0;
+        z-index: 1;
+      }
+    </style>
   </head>
   <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <!-- Modern Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light">
       <div class="container">
-        <a class="navbar-brand" href="/">📦 Shop Simulation</a>
+        <a class="navbar-brand" href="/">
+          <i class="fas fa-shopping-bag"></i>
+          MODERN SHOP
+        </a>
         <div class="navbar-nav ms-auto">
-          <a class="nav-link" href="/orders">📋 View All Orders</a>
+          <a class="nav-link" href="/orders">
+            <i class="fas fa-list-alt"></i>
+            📋 View All Orders
+          </a>
         </div>
       </div>
     </nav>
-    
-    <div class="container">
-      <h1 class="text-center mt-5">📦 Place New Order</h1>
 
+    <div class="container main-container">
+      <!-- Page Header -->
+      <div class="page-header fade-in">
+        <h1 class="page-title">
+          <i class="fas fa-cart-plus"></i>
+          Place New Order
+        </h1>
+        <p class="page-subtitle">Complete the form below to place a new order. All fields are required.</p>
+      </div>
+
+      <!-- Form Steps Indicator -->
+      <div class="form-steps fade-in">
+        <div class="form-step">
+          <div class="step-circle active">1</div>
+          <div class="step-label active">Client Info</div>
+        </div>
+        <div class="form-step">
+          <div class="step-circle">2</div>
+          <div class="step-label">Order Details</div>
+        </div>
+        <div class="form-step">
+          <div class="step-circle">3</div>
+          <div class="step-label">Confirmation</div>
+        </div>
+      </div>
+
+      <!-- Flash Messages -->
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
           {% for category, message in messages %}
-            <div class="alert alert-{{ category }} mt-3" role="alert">
-              {{ message }}
+            <div class="alert alert-modern alert-{{ category }} fade-in mb-4" role="alert">
+              <div class="d-flex align-items-center">
+                <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-circle{% elif category == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} me-3" style="font-size: 1.2rem;"></i>
+                <div>{{ message }}</div>
+              </div>
             </div>
           {% endfor %}
         {% endif %}
       {% endwith %}
 
+      <!-- Success Message -->
       {% if success %}
-        <div class="alert alert-success mt-3" role="alert">
-          {{ success }}
+        <div class="alert alert-modern alert-success fade-in mb-4" role="alert">
+          <div class="d-flex align-items-center">
+            <i class="fas fa-check-circle me-3" style="font-size: 1.2rem;"></i>
+            <div>{{ success }}</div>
+          </div>
         </div>
       {% endif %}
 
-      <form action="/order" method="post" class="mt-4">
-        <h5 class="mb-3">Client Information</h5>
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label for="firstName" class="form-label">First Name</label>
-            <input type="text" class="form-control" id="firstName" name="firstName" required>
+      <!-- Order Form -->
+      <div class="order-form-container fade-in">
+        <form action="/order" method="post">
+          <!-- Client Information Section -->
+          <div class="form-section-title">
+            <i class="fas fa-user-circle"></i>
+            Client Information
           </div>
-          <div class="col-md-6 mb-3">
-            <label for="lastName" class="form-label">Last Name</label>
-            <input type="text" class="form-control" id="lastName" name="lastName" required>
+          
+          <div class="row form-row-spacing">
+            <div class="col-md-6 mb-4">
+              <label for="firstName" class="form-label">
+                <i class="fas fa-user"></i>
+                First Name
+              </label>
+              <div class="input-with-icon">
+                <i class="fas fa-user"></i>
+                <input type="text" class="form-control" id="firstName" name="firstName" placeholder="Enter first name" required>
+              </div>
+            </div>
+            <div class="col-md-6 mb-4">
+              <label for="lastName" class="form-label">
+                <i class="fas fa-user"></i>
+                Last Name
+              </label>
+              <div class="input-with-icon">
+                <i class="fas fa-user"></i>
+                <input type="text" class="form-control" id="lastName" name="lastName" placeholder="Enter last name" required>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="mb-3">
-          <label for="phone" class="form-label">Phone Number</label>
-          <input type="tel" class="form-control" id="phone" name="phone" placeholder="+216 12 345 678" required>
-        </div>
-        
-        <h5 class="mb-3 mt-4">Order Details</h5>
-        <div class="mb-3">
-          <label for="item" class="form-label">Item Name</label>
-          <input type="text" class="form-control" id="item" name="item" required>
-        </div>
-        <div class="mb-3">
-          <label for="price" class="form-label">Price</label>
-          <input type="number" class="form-control" id="price" name="price" required>
-        </div>
-        <div class="mb-3">
-          <label for="country" class="form-label">Country</label>
-          <select class="form-select" id="country" name="country" required>
-            <option value="Tunisia">Tunisia</option>
-            <option value="France">France</option>
-            <option value="Germany">Germany</option>
-          </select>
-        </div>
-        <button type="submit" class="btn btn-primary">Send Order</button>
-      </form>
+          
+          <div class="mb-4 form-row-spacing">
+            <label for="phone" class="form-label">
+              <i class="fas fa-phone"></i>
+              Phone Number
+            </label>
+            <div class="input-with-icon">
+              <i class="fas fa-phone"></i>
+              <input type="tel" class="form-control" id="phone" name="phone" placeholder="+216 12 345 678" required>
+            </div>
+          </div>
+          
+          <!-- Order Details Section -->
+          <div class="form-section-title">
+            <i class="fas fa-shopping-cart"></i>
+            Order Details
+          </div>
+          
+          <div class="mb-4 form-row-spacing">
+            <label for="item" class="form-label">
+              <i class="fas fa-box"></i>
+              Item Name
+            </label>
+            <div class="input-with-icon">
+              <i class="fas fa-box"></i>
+              <input type="text" class="form-control" id="item" name="item" placeholder="Enter item name" required>
+            </div>
+          </div>
+          
+          <div class="mb-4 form-row-spacing">
+            <label for="price" class="form-label">
+              <i class="fas fa-tag"></i>
+              Price (TND)
+            </label>
+            <div class="input-with-icon">
+              <i class="fas fa-tag"></i>
+              <input type="number" class="form-control" id="price" name="price" placeholder="0.00" min="0" step="0.01" required>
+            </div>
+            <div class="form-text text-muted mt-2">Enter the price in Tunisian Dinar (TND)</div>
+          </div>
+          
+          <div class="mb-4 form-row-spacing">
+            <label for="country" class="form-label">
+              <i class="fas fa-globe"></i>
+              Country
+            </label>
+            <div class="input-with-icon">
+              <i class="fas fa-globe"></i>
+              <select class="form-select" id="country" name="country" required>
+                <option value="" disabled selected>Select your country</option>
+                <option value="Tunisia">🇹🇳 Tunisia</option>
+                <option value="France">🇫🇷 France</option>
+                <option value="Germany">🇩🇪 Germany</option>
+              </select>
+            </div>
+          </div>
+          
+          <button type="submit" class="submit-btn">
+            <i class="fas fa-paper-plane"></i>
+            Send Order
+          </button>
+        </form>
+      </div>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script>
+      // Add animation to form elements on focus
+      document.addEventListener('DOMContentLoaded', function() {
+        const formInputs = document.querySelectorAll('.form-control, .form-select');
+        
+        formInputs.forEach(input => {
+          // Add focus effect
+          input.addEventListener('focus', function() {
+            this.parentElement.style.transform = 'translateY(-2px)';
+          });
+          
+          input.addEventListener('blur', function() {
+            this.parentElement.style.transform = 'translateY(0)';
+          });
+          
+          // Add input validation feedback
+          input.addEventListener('input', function() {
+            if (this.checkValidity()) {
+              this.style.borderColor = '#10b981';
+            } else {
+              this.style.borderColor = '#ef4444';
+            }
+          });
+        });
+        
+        // Animate form appearance
+        const formContainer = document.querySelector('.order-form-container');
+        formContainer.style.opacity = '0';
+        formContainer.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+          formContainer.style.transition = 'opacity 0.5s, transform 0.5s';
+          formContainer.style.opacity = '1';
+          formContainer.style.transform = 'translateY(0)';
+        }, 300);
+        
+        // Price input formatting
+        const priceInput = document.getElementById('price');
+        priceInput.addEventListener('blur', function() {
+          if (this.value) {
+            const value = parseFloat(this.value);
+            if (!isNaN(value)) {
+              this.value = value.toFixed(2);
+            }
+          }
+        });
+      });
+    </script>
   </body>
 </html>
