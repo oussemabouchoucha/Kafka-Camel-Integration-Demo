@@ -11,6 +11,7 @@ L'objectif est d'assurer une communication fluide, résiliente et scalable entre
 graph LR
     subgraph "Producer Layer"
         P["🛒 Shop App<br/>(Python/Flask)"]
+        DB_S[("🗄️ shop_db<br/>(PostgreSQL)")]
     end
 
     subgraph "Messaging Layer"
@@ -23,16 +24,24 @@ graph LR
 
     subgraph "Consumer Layer (Logistics)"
         A["🇹🇳 Aramex<br/>(Node.js/Express)"]
+        DB_A[("🗄️ aramex_db<br/>(PostgreSQL)")]
         D["🌍 DHL<br/>(PHP/Apache)"]
+        DB_D[("🗄️ dhl_db<br/>(PostgreSQL)")]
     end
 
     P -- "1. JSON" --> K
+    P -."Store".-> DB_S
     K -- "2. Stream" --> C
     C -- "3a. YAML (POST)" --> A
+    A -."Store".-> DB_A
     C -- "3b. XML (POST)" --> D
+    D -."Store".-> DB_D
 
     style C fill:#f9f,stroke:#333,stroke-width:4px
     style K fill:#ccf,stroke:#333,stroke-width:2px
+    style DB_S fill:#efe,stroke:#333,stroke-width:2px
+    style DB_A fill:#efe,stroke:#333,stroke-width:2px
+    style DB_D fill:#efe,stroke:#333,stroke-width:2px
 ```
 
 ## 2. Diagramme de Séquence (Orchestration Temporelle)
@@ -43,12 +52,17 @@ Ce diagramme illustre le cycle de vie exact d'une commande et l'ordre chronologi
 sequenceDiagram
     autonumber
     participant Shop as 🐍 Shop (Python/Flask)
+    participant ShopDB as 🗄️ shop_db
     participant Kafka as 📨 Kafka (Broker)
     participant Camel as 🐫 Middleware (Java/Camel)
     participant Aramex as 📦 Aramex (Node.js)
+    participant AramexDB as 🗄️ aramex_db
     participant DHL as ✈️ DHL (PHP)
+    participant DHLDB as 🗄️ dhl_db
 
     Note over Shop, Kafka: Phase 1: Production (Asynchrone)
+    Shop->>ShopDB: INSERT INTO shop_orders
+    ShopDB-->>Shop: Order saved (ID)
     Shop->>Kafka: Produce Message (JSON)
     Note right of Shop: { "id": 1, "country": "..." }
 
@@ -62,10 +76,14 @@ sequenceDiagram
         alt Country == Tunisia
             Camel->>Camel: Marshal to YAML
             Camel->>Aramex: HTTP POST (YAML Payload)
+            Aramex->>AramexDB: INSERT INTO aramex_orders
+            AramexDB-->>Aramex: Order persisted
             Aramex-->>Camel: 200 OK
         else Country != Tunisia
             Camel->>Camel: Marshal to XML
             Camel->>DHL: HTTP POST (XML Payload)
+            DHL->>DHLDB: INSERT INTO dhl_orders
+            DHLDB-->>DHL: Order persisted
             DHL-->>Camel: 200 OK
         end
     end
