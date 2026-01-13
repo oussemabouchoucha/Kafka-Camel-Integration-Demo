@@ -15,6 +15,8 @@ Everything is fully containerized with **Docker** 🐳.
 - ✅ **Interactive Dashboards** - Modern UI for each delivery partner
 - ✅ **Event-Driven Architecture** - Kafka-powered asynchronous communication
 - ✅ **Multi-Format Support** - JSON, YAML, and XML transformations
+- ✅ **PostgreSQL Database** - Persistent storage for all orders across services
+- ✅ **pgAdmin Integration** - Web-based database management interface
 
 
 ## 📝 Project Description
@@ -44,6 +46,8 @@ The core components include:
 | Integration        | Apache Camel (EIP patterns)                  |
 | Backend Frameworks | Spring Boot (Java), Flask (Python), Express.js (Node.js) |
 | Web Server         | Apache HTTP Server (for PHP)                 |
+| Database           | PostgreSQL 15                                |
+| Database Management| pgAdmin 4                                    |
 | Data Formats       | JSON, YAML, XML                              |
 | Monitoring         | Hawtio, Kafka UI                             |
 
@@ -53,7 +57,7 @@ The core components include:
 - ✅ Docker Desktop installed and running
 - ✅ Git (for cloning the repository)
 - ✅ At least 8GB RAM available for Docker
-- ✅ Ports available: 5000, 3000, 8080, 8081, 8090, 9092
+- ✅ Ports available: 5000, 3000, 5050, 5432, 8080, 8081, 8090, 9092
 
 **Note:** You do **NOT** need to install Java, Maven, Python, Node.js, or PHP locally. Docker handles the entire environment!
 
@@ -134,7 +138,30 @@ Inspect messages directly in the Kafka broker:
 - Status changes from DHL/Aramex are reflected instantly
 
 
-### 5. �🔍 Check the Logs (Debugging)
+### 5. 🗄️ Database Management (pgAdmin)
+
+**Access pgAdmin for database inspection:**  
+👉 http://localhost:5050
+
+**Login credentials:**
+- Email: `admin@admin.com`
+- Password: `admin`
+
+**Connect to PostgreSQL:**
+- Right-click "Servers" → "Register" → "Server"
+- Name: `Logistics DB`
+- Host: `postgres`
+- Port: `5432`
+- Database: `logistics_db`
+- Username: `admin`
+- Password: `password`
+
+**Database Tables:**
+- `shop_orders` - All orders from the shop
+- `aramex_orders` - Tunisia domestic deliveries
+- `dhl_orders` - International deliveries
+
+### 6. 🔍 Check the Logs (Debugging)
 
 
 - **Middleware** (routing logic):
@@ -275,6 +302,7 @@ Contributions are welcome! Feel free to:
 ## 📝 Additional Documentation
 
 - **Technical Report (French):** See [RapportTechnique.md](RapportTechnique.md) for detailed technical documentation
+- **PostgreSQL Integration Guide:** See [POSTGRESQL_INTEGRATION.md](POSTGRESQL_INTEGRATION.md) for database setup and migration details
 - **Repository:** [GitHub - Kafka-Camel-Integration-Demo](https://github.com/oussemabouchoucha/Kafka-Camel-Integration-Demo)
 
 ## 📊 Service Ports Reference
@@ -287,6 +315,8 @@ Contributions are welcome! Feel free to:
 | Aramex       | 3000  | http://localhost:3000            | Tunisia deliveries dashboard   |
 | DHL          | 8081  | http://localhost:8081            | International deliveries dashboard |
 | Kafka UI     | 8090  | http://localhost:8090            | Kafka topic monitoring         |
+| pgAdmin      | 5050  | http://localhost:5050            | PostgreSQL database management |
+| PostgreSQL   | 5432  | localhost:5432                   | Database connection (internal) |
 | Kafka Broker | 9092  | localhost:9092                   | Kafka connection (internal)    |
 
 ## 🔧 Troubleshooting
