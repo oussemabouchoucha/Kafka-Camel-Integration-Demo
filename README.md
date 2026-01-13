@@ -188,22 +188,27 @@ Inspect messages directly in the Kafka broker:
 ### Order Placement Flow
 
 1. **Producer**: The Shop App (Python/Flask) sends the order as JSON to the Kafka topic `orders`.
-2. **Consumer**: The Middleware (Spring Boot + Camel) listens to the topic.
-3. **Routing (Content-Based Router)**:
+2. **Database Storage**: Shop saves the order to `shop_db` PostgreSQL database.
+3. **Consumer**: The Middleware (Spring Boot + Camel) listens to the topic.
+4. **Routing (Content-Based Router)**:
    - 🇹🇳 If **Country = Tunisia** → Convert to **YAML** → Send to **Aramex** (Node.js)
    - 🌍 For **any other country** (e.g., France, Germany) → Convert to **XML** → Send to **DHL** (PHP)
+5. **Persistence**: Aramex saves to `aramex_db` / DHL saves to `dhl_db`
 
 ### Status Update Flow (NEW ✨)
 
-4. **Status Management**: Delivery partners (DHL/Aramex) can update order status via their dashboards
-5. **Kafka Publishing**: Status updates are published to Kafka topic `order-status-updates`
-6. **Real-time Sync**: Shop service consumes status updates and reflects changes instantly
+6. **Status Management**: Delivery partners (DHL/Aramex) can update order status via their dashboards
+7. **Database Update**: Status is updated in their respective databases (`aramex_db` or `dhl_db`)
+8. **Kafka Publishing**: Status updates are published to Kafka topic `order-status-updates`
+9. **Real-time Sync**: Shop service consumes status updates and reflects changes in `shop_db`
+10. **UI Update**: Shop interface displays the updated status instantly
 
 
 ```mermaid
 graph LR
     subgraph "Producer Layer"
         P["🛒 Shop App<br/>(Python/Flask)"]
+        DB_S[("🗄️ shop_db<br/>(PostgreSQL)")]
     end
 
 
@@ -220,22 +225,31 @@ graph LR
 
     subgraph "Consumer Layer (Logistics)"
         A["🇹🇳 Aramex<br/>(Node.js/Express)"]
+        DB_A[("🗄️ aramex_db<br/>(PostgreSQL)")]
         D["🌍 DHL<br/>(PHP/Apache)"]
+        DB_D[("🗄️ dhl_db<br/>(PostgreSQL)")]
     end
 
 
     P -- "1. JSON" --> K
+    P -.->|"Store"| DB_S
     K -- "2. Stream" --> C
     C -- "3a. YAML (Tunisia)" --> A
+    A -.->|"Store"| DB_A
     C -- "3b. XML (Others)" --> D
+    D -.->|"Store"| DB_D
     A -- "4a. Status Update" --> KS
     D -- "4b. Status Update" --> KS
     KS -- "5. Real-time Sync" --> P
+    P -.->|"Update Status"| DB_S
 
 
     style C fill:#f9f,stroke:#333,stroke-width:4px
     style K fill:#ccf,stroke:#333,stroke-width:2px
     style KS fill:#cfc,stroke:#333,stroke-width:2px
+    style DB_S fill:#efe,stroke:#333,stroke-width:2px
+    style DB_A fill:#efe,stroke:#333,stroke-width:2px
+    style DB_D fill:#efe,stroke:#333,stroke-width:2px
 ```
 
 
