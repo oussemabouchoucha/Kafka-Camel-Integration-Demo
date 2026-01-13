@@ -342,18 +342,6 @@
     </div>
 
     <script>
-        function parseXMLOrder(xmlString) {
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
-            
-            return {
-                orderId: xmlDoc.querySelector('id')?.textContent || 'Unknown',
-                item: xmlDoc.querySelector('item')?.textContent || 'Unknown',
-                price: xmlDoc.querySelector('price')?.textContent || '0',
-                country: xmlDoc.querySelector('country')?.textContent || 'Unknown'
-            };
-        }
-
         function formatTime(timestamp) {
             const date = new Date(timestamp);
             return date.toLocaleString('en-US', {
@@ -399,7 +387,6 @@
 
             container.innerHTML = '<div class="orders-list">' +
                 orders.map((order, index) => {
-                    const orderData = parseXMLOrder(order.data);
                     const status = order.status || 'pending';
                     const statusEmoji = {
                         'pending': '⏳',
@@ -416,22 +403,22 @@
                         <div class="order-card">
                             <div class="order-header">
                                 <div class="order-id">Order #${order.id}</div>
-                                <div class="order-time">⏰ ${formatTime(order.timestamp)}</div>
+                                <div class="order-time">⏰ ${formatTime(order.timestamp * 1000)}</div>
                             </div>
                             <div class="order-details">
                                 <div class="detail-item">
                                     <span class="detail-label">Item</span>
-                                    <span class="detail-value">📦 ${orderData.item}</span>
+                                    <span class="detail-value">📦 ${order.item || 'Unknown'}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Destination</span>
                                     <span class="detail-value">
-                                        <span class="country-badge">🌍 ${orderData.country}</span>
+                                        <span class="country-badge">🌍 ${order.country || 'Unknown'}</span>
                                     </span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Price</span>
-                                    <span class="price">$${orderData.price}</span>
+                                    <span class="price">$${order.price || '0'}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Status</span>
@@ -440,12 +427,12 @@
                             </div>
                             <div class="action-buttons">
                                 <button class="action-btn deliver" 
-                                    onclick="updateStatus('${orderData.orderId || order.id}', 'delivered')"
+                                    onclick="updateStatus('${order.id}', 'delivered')"
                                     ${status !== 'pending' ? 'disabled' : ''}>
                                     ✓ Mark as Delivered
                                 </button>
                                 <button class="action-btn return" 
-                                    onclick="updateStatus('${orderData.orderId || order.id}', 'returned')"
+                                    onclick="updateStatus('${order.id}', 'returned')"
                                     ${status !== 'pending' ? 'disabled' : ''}>
                                     ↩ Mark as Returned
                                 </button>
@@ -462,15 +449,12 @@
             // Count today's orders
             const today = new Date().toDateString();
             const todayCount = orders.filter(order => 
-                new Date(order.timestamp).toDateString() === today
+                new Date(order.timestamp * 1000).toDateString() === today
             ).length;
             document.getElementById('todayOrders').textContent = todayCount;
             
             // Count unique countries
-            const countries = new Set(orders.map(order => {
-                const data = parseXMLOrder(order.data);
-                return data.country;
-            }));
+            const countries = new Set(orders.map(order => order.country).filter(c => c));
             document.getElementById('countriesServed').textContent = countries.size;
         }
 

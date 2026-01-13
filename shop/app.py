@@ -1,52 +1,50 @@
 import json
 import os
 from flask import Flask, render_template, request, redirect, url_for
+from flask_sqlalchemy import SQLAlchemy
 from confluent_kafka import Producer, Consumer, KafkaException
 import uuid
 from datetime import datetime
 import threading
-from filelock import FileLock
 
 app = Flask(__name__)
 
-# Define the path for the persistent order data
-DATA_DIR = '/app/data'
-ORDERS_FILE = os.path.join(DATA_DIR, 'orders.json')
-LOCK_FILE = os.path.join(DATA_DIR, 'orders.json.lock')
+# PostgreSQL Configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://admin:password@postgres:5432/logistics_db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 
-# Ensure the data directory exists
-os.makedirs(DATA_DIR, exist_ok=True)
+# Define ShopOrder Model
+class ShopOrder(db.Model):
+    __tablename__ = 'shop_orders'
+    
+    id = db.Column(db.String(36), primary_key=True)
+    first_name = db.Column(db.String(100))
+    last_name = db.Column(db.String(100))
+    phone = db.Column(db.String(20))
+    item = db.Column(db.String(255))
+    price = db.Column(db.String(20))
+    country = db.Column(db.String(100))
+    status = db.Column(db.String(50), default='pending')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'firstName': self.first_name,
+            'lastName': self.last_name,
+            'phone': self.phone,
+            'item': self.item,
+            'price': self.price,
+            'country': self.country,
+            'status': self.status,
+            'createdAt': self.created_at.isoformat() if self.created_at else None
+        }
 
-# Global variable to hold orders
-orders_db = []
-
-# Create a lock object
-lock = FileLock(LOCK_FILE)
-
-def load_orders():
-    """Load orders from the JSON file into memory."""
-    global orders_db
-    with lock:
-        try:
-            if os.path.exists(ORDERS_FILE):
-                with open(ORDERS_FILE, 'r') as f:
-                    orders_db = json.load(f)
-                    print(f"✅ Loaded {len(orders_db)} orders from {ORDERS_FILE}")
-            else:
-                orders_db = []
-                print(f"⚠️ Orders file not found at {ORDERS_FILE}, starting fresh.")
-        except (json.JSONDecodeError, IOError) as e:
-            print(f"❌ Error loading orders: {e}. Starting with an empty list.")
-            orders_db = []
-
-def save_orders():
-    """Save the current orders from memory to the JSON file."""
-    with lock:
-        try:
-            with open(ORDERS_FILE, 'w') as f:
-                json.dump(orders_db, f, indent=4)
-        except IOError as e:
-            print(f"❌ Error saving orders: {e}")
+# Create tables
+with app.app_context():
+    db.create_all()
+    print('✅ Database tables created successfully')
 
 # Kafka Producer Configuration
 producer_config = {
@@ -83,20 +81,15 @@ def consume_status_updates():
             
             print(f'📥 Received status update: Order {order_id} -> {new_status}')
             
-            # Find and update order, then save
-            # No need for separate load_orders() call here, as orders_db is in-memory
-            order_found = False
-            for order in orders_db:
-                if order['id'] == order_id:
-                    order['status'] = new_status
-                    order_found = True
-                    break
-            
-            if order_found:
-                save_orders() # Persist the change
-                print(f'✅ Order {order_id} status updated to {new_status} and saved.')
-            else:
-                print(f'⚠️ Order {order_id} not found in database for status update.')
+            # Update order in database
+            with app.app_context():
+                order = ShopOrder.query.filter_by(id=order_id).first()
+                if order:
+                    order.status = new_status
+                    db.session.commit()
+                    print(f'✅ Order {order_id} status updated to {new_status} in database.')
+                else:
+                    print(f'⚠️ Order {order_id} not found in database for status update.')
                     
         except Exception as e:
             print(f'❌ Error in status consumer: {e}')
@@ -111,11 +104,9 @@ def index():
 
 @app.route('/orders')
 def view_orders():
-    # To ensure the view is up-to-date, we can reload from the file.
-    # This is a simple approach; for high-traffic sites, a more sophisticated
-    # state management would be needed.
-    load_orders()
-    return render_template('orders.html', orders=orders_db)
+    orders = ShopOrder.query.order_by(ShopOrder.created_at.desc()).all()
+    orders_list = [order.to_dict() for order in orders]
+    return render_template('orders.html', orders=orders_list)
 
 @app.route('/api/kafka/status-update', methods=['POST'])
 def kafka_status_update():
@@ -156,30 +147,34 @@ def kafka_status_update():
 @app.route('/order', methods=['POST'])
 def order():
     form_data = request.form
-    order_data = {
-        "id": str(uuid.uuid4()),
-        "firstName": form_data.get('firstName'),
-        "lastName": form_data.get('lastName'),
-        "phone": form_data.get('phone'),
-        "item": form_data.get('item'),
-        "price": form_data.get('price'),
-        "country": form_data.get('country'),
-        "status": "pending",
-        "createdAt": datetime.now().isoformat()
-    }
+    order_id = str(uuid.uuid4())
     
-    # Add order to the list and save
-    orders_db.append(order_data)
-    save_orders()
+    # Create new order in database first
+    new_order = ShopOrder(
+        id=order_id,
+        first_name=form_data.get('firstName'),
+        last_name=form_data.get('lastName'),
+        phone=form_data.get('phone'),
+        item=form_data.get('item'),
+        price=form_data.get('price'),
+        country=form_data.get('country'),
+        status='pending'
+    )
+    
+    db.session.add(new_order)
+    db.session.commit()
+    
+    # Convert to dict for Kafka
+    order_data = new_order.to_dict()
     
     # Send data to Kafka
     producer.produce('orders', key=order_data['id'], value=json.dumps(order_data))
     producer.flush()
+    
+    print(f'✅ Order {order_id} saved to database and sent to Kafka')
 
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    # Load initial data from file
-    load_orders()
     # Run the Flask app
     app.run(debug=True, host='0.0.0.0', port=5000)

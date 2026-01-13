@@ -6,6 +6,20 @@ ini_set('display_errors', '0');
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
+// PostgreSQL connection
+$host = getenv('DB_HOST') ?: 'postgres';
+$dbname = getenv('DB_NAME') ?: 'logistics_db';
+$user = getenv('DB_USER') ?: 'admin';
+$password = getenv('DB_PASSWORD') ?: 'password';
+
+try {
+    $pdo = new PDO("pgsql:host=$host;dbname=$dbname", $user, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    echo json_encode(['success' => false, 'error' => 'Database connection failed']);
+    exit;
+}
+
 // Get JSON input
 $input = file_get_contents('php://input');
 $data = json_decode($input, true);
@@ -24,33 +38,21 @@ if (!in_array($status, ['pending', 'delivered', 'returned'])) {
     exit;
 }
 
-// Load existing statuses
-$statusFile = 'order_status.json';
-$statuses = [];
-if (file_exists($statusFile)) {
-    $statusJson = file_get_contents($statusFile);
-    $statuses = json_decode($statusJson, true) ?: [];
-}
-
-// Update status
-$statuses[$orderId] = $status;
-
-// Save to file
-$saved = file_put_contents($statusFile, json_encode($statuses, JSON_PRETTY_PRINT));
-
-if ($saved === false) {
-    echo json_encode(['success' => false, 'error' => 'Failed to save status file']);
-    exit;
-}
-
-// Load order details to get the item
-$detailsFile = 'order_details.json';
-$item = 'Unknown';
-if (file_exists($detailsFile)) {
-    $orderDetails = json_decode(file_get_contents($detailsFile), true);
-    if (isset($orderDetails[$orderId]['item'])) {
-        $item = $orderDetails[$orderId]['item'];
+// Update status in database
+try {
+    $stmt = $pdo->prepare("UPDATE dhl_orders SET status = :status WHERE id = :id RETURNING item");
+    $stmt->execute([':status' => $status, ':id' => $orderId]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$result) {
+        echo json_encode(['success' => false, 'error' => 'Order not found']);
+        exit;
     }
+    
+    $item = $result['item'] ?? 'Unknown';
+} catch (PDOException $e) {
+    echo json_encode(['success' => false, 'error' => 'Failed to update status']);
+    exit;
 }
 
 // Send status update to middleware
@@ -80,12 +82,12 @@ if (function_exists('curl_init')) {
         curl_close($ch);
         $kafkaNotified = ($httpCode == 200);
     } catch (Exception $e) {
-        // Curl failed, but status was saved locally
+        // Curl failed, but status was saved in database
     }
 }
 
 // Log the update
-error_log("[DHL] Status updated: Order $orderId -> $status (Saved: yes, Middleware notified: $httpCode)");
+error_log("[DHL] Status updated: Order $orderId -> $status (Database: yes, Middleware notified: $httpCode)");
 
 echo json_encode([
     'success' => true,

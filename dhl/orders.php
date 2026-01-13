@@ -6,41 +6,51 @@ ini_set('display_errors', '0');
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
-$logFile = 'dhl.log';
-$statusFile = 'order_status.json';
-$orders = [];
+// PostgreSQL connection
+$host = getenv('DB_HOST') ?: 'postgres';
+$dbname = getenv('DB_NAME') ?: 'logistics_db';
+$user = getenv('DB_USER') ?: 'admin';
+$password = getenv('DB_PASSWORD') ?: 'password';
 
-// Load statuses from JSON file
-$statuses = [];
-if (file_exists($statusFile)) {
-    $statusJson = file_get_contents($statusFile);
-    $statuses = json_decode($statusJson, true) ?: [];
-}
-
-if (file_exists($logFile)) {
-    $lines = file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+try {
+    $pdo = new PDO("pgsql:host=$host;dbname=$dbname", $user, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
-    foreach ($lines as $index => $line) {
-        if (trim($line)) {
-            // Parse XML to extract orderId
-            $orderId = '';
-            if (preg_match('/<id>(.*?)<\/id>/', $line, $matches)) {
-                $orderId = $matches[1];
-            }
-            
-            $orderNumber = count($lines) - $index;
-            $orders[] = [
-                'id' => $orderNumber,
-                'data' => $line,
-                'timestamp' => time() - (count($lines) - $index) * 60,
-                'status' => !empty($orderId) && isset($statuses[$orderId]) ? $statuses[$orderId] : 'pending'
-            ];
-        }
+    // Create table if not exists
+    $pdo->exec("CREATE TABLE IF NOT EXISTS dhl_orders (
+        id VARCHAR(50) PRIMARY KEY,
+        first_name VARCHAR(100),
+        last_name VARCHAR(100),
+        phone VARCHAR(20),
+        item VARCHAR(200),
+        price DECIMAL(10,2),
+        country VARCHAR(100),
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+    
+    // Fetch all DHL orders from database
+    $stmt = $pdo->query("SELECT * FROM dhl_orders ORDER BY created_at DESC");
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    $orders = [];
+    foreach ($rows as $row) {
+        $orders[] = [
+            'id' => $row['id'],
+            'firstName' => $row['first_name'],
+            'lastName' => $row['last_name'],
+            'phone' => $row['phone'],
+            'item' => $row['item'],
+            'price' => $row['price'],
+            'country' => $row['country'],
+            'status' => $row['status'],
+            'timestamp' => strtotime($row['created_at'])
+        ];
     }
+    
+    echo json_encode($orders);
+} catch (PDOException $e) {
+    error_log("[DHL] Database error: " . $e->getMessage());
+    echo json_encode(['error' => 'Database connection failed']);
 }
-
-// Reverse to show newest first
-$orders = array_reverse($orders);
-
-echo json_encode($orders);
 ?>
